@@ -1,44 +1,54 @@
 const CACHE_NAME = "version-1";
-const urlsToCache = [ 'index.html', 'offline.html' ];
+const urlsToCache = ['index.html'];
+const DATA_CACHE_NAME = "data-cache-v1";
 
-const self = this;
-
-// Install SW
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('Opened cache');
-
                 return cache.addAll(urlsToCache);
             })
     )
 });
 
-// Listen for requests
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(() => {
-                return fetch(event.request) 
-                    .catch(() => caches.match('offline.html'))
+    const { url } = event.request;
+    if (url.includes("weatherapi.com")) { // Check if the request is for the weather API
+        event.respondWith(
+            caches.open(DATA_CACHE_NAME).then(cache => {
+                return fetch(event.request)
+                    .then(response => {
+                        if (response.status === 200) {
+                            cache.put(event.request.url, response.clone());
+                        }
+                        return response;
+                    })
+                    .catch(() => caches.match(event.request)); // Return cached response if fetch fails
             })
-    )
+        );
+    } else {
+        // Other fetch requests, potentially for your static assets
+        event.respondWith(
+            caches.match(event.request).then(cachedResponse => {
+                return cachedResponse || fetch(event.request);
+            })
+        );
+    }
 });
 
-// Activate the SW
 self.addEventListener('activate', (event) => {
-    const cacheWhitelist = [];
-    cacheWhitelist.push(CACHE_NAME);
+    const cacheWhitelist = [CACHE_NAME, DATA_CACHE_NAME]; // Include the data cache name
 
     event.waitUntil(
-        caches.keys().then((cacheNames) => Promise.all(
-            cacheNames.map((cacheName) => {
-                if(!cacheWhitelist.includes(cacheName)) {
-                    return caches.delete(cacheName);
-                }
-            })
-        ))
-            
-    )
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (!cacheWhitelist.includes(cacheName)) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
 });
