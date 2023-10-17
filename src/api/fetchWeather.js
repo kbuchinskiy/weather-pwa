@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const URL = 'http://api.weatherapi.com/v1/current.json?aqi=no';
+const URL = 'https://api.weatherapi.com/v1/current.json?aqi=no';
 const API_KEY = '69f028e3aab242eaa67170122231510';
 
 export const fetchWeather = async (query) => {
