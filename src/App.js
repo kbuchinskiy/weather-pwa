@@ -33,16 +33,24 @@ const App = () => {
         }
     }
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+    }
+
     return (
         <div className="main-container">
+            <form onSubmit={handleSubmit} action="" autocomplete="on">
             <input
+                autocomplete="on"
                 type="text"
+                name="city"
                 className="search-input"
                 placeholder="Type city name..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={search}
             />
+            </form>
 
             {isOffline && <div className="offline-message">You're currently offline, showing last cached results.</div>}
 
